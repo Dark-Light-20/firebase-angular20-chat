@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { inject } from '@angular/core';
@@ -21,13 +20,13 @@ export class Auth {
     this.isLoggingIn = true;
 
     try {
-      // const user = await this.authService.loginWithGoogle();
+      const user = await this.authService.loginWithGoogle();
 
       // Simulación de llamada al servicio de autenticación (reemplazar con la línea anterior en producción)
-      let user = null;
+      /* let user = null;
       user = await new Promise((resolve) => {
         setTimeout(() => resolve({ name: 'Usuario de Prueba' }), 1000);
-      });
+      }); */
 
       if (user) {
         await this.router.navigate(['/chat']);
@@ -54,10 +53,10 @@ export class Auth {
   }
 
   ngOnInit(): void {
-    // this.authService.isLoggedIn$.subscribe(isLoggedIn => {
-    //   if (isLoggedIn) {
-    //     this.router.navigate(['/chat']);
-    //   }
-    // });
+    this.authService.isLoggedIn$.subscribe((isLoggedIn) => {
+      if (isLoggedIn) {
+        this.router.navigate(['/chat']);
+      }
+    });
   }
 }
