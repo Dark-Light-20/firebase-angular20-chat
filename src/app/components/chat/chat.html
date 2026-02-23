@@ -4,13 +4,13 @@
   <header class="chat-header">
     <div class="user-info">
       <img
-        [src]="user?.photoURL || 'default-avatar.png'"
-        [alt]="user?.displayName || 'User'"
+        [src]="user?.photoUrl || 'default-avatar.png'"
+        [alt]="user?.name || 'User'"
         class="user-avatar"
         (error)="handleImageError($event)"
       />
       <div class="user-details">
-        <h3 class="user-name">{{ user?.displayName || 'User' }}</h3>
+        <h3 class="user-name">{{ user?.name || 'User' }}</h3>
         <p class="user-email">{{ user?.email }}</p>
       </div>
     </div>
@@ -48,35 +48,35 @@
 
     <!-- Lista de mensajes -->
     <div class="messages-list">
-      @for (mensaje of messages; track trackByMessage($index, mensaje)) {
+      @for (message of messages; track trackByMessage($index, message)) {
         <div
           class="message-wrapper"
-          [class.user-message]="mensaje.tipo === 'usuario'"
-          [class.assistant-message]="mensaje.tipo === 'asistente'"
+          [class.user-message]="message.type === 'user'"
+          [class.assistant-message]="message.type === 'assistant'"
         >
           <!-- Mensaje del usuario -->
-          @if (mensaje.tipo === 'usuario') {
+          @if (message.type === 'user') {
             <div class="message user-msg">
               <div class="message-content">
-                <p>{{ mensaje.contenido }}</p>
+                <p>{{ message.content }}</p>
               </div>
               <div class="message-time">
-                {{ formatTime(mensaje.fechaEnvio) }}
+                {{ formatTime(message.sentDate) }}
               </div>
             </div>
           }
 
           <!-- Mensaje del asistente -->
-          @if (mensaje.tipo === 'asistente') {
+          @if (message.type === 'assistant') {
             <div class="message assistant-msg">
               <div class="message-avatar">🤖</div>
               <div class="message-bubble">
                 <div class="message-content">
-                  <p [innerHTML]="formatAssistantMessage(mensaje.contenido)"></p>
+                  <p [innerHTML]="formatAssistantMessage(message.content)"></p>
                 </div>
                 <div class="message-time">
-                  {{ formatTime(mensaje.fechaEnvio) }}
-                  @if (mensaje.estado === 'error') {
+                  {{ formatTime(message.sentDate) }}
+                  @if (message.status === 'error') {
                     <span class="error-indicator">⚠️</span>
                   }
                 </div>

@@ -12,7 +12,8 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { ChatService } from '../../services/chat';
-// import { MensajeChat } from '../../models/chat';
+import { ChatMessage } from '../../models/chat';
+import { User } from '../../models/user';
 
 @Component({
   selector: 'app-chat',
@@ -29,8 +30,8 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   messagesContainer = viewChild('messagesContainer', { read: ElementRef });
   messageInput = viewChild('messageInput', { read: ElementRef });
 
-  user: any = null; // Información del usuario actual
-  messages: any[] = []; // Lista de mensajes del chat
+  user: User | null = null; // Información del usuario actual
+  messages: ChatMessage[] = []; // Lista de mensajes del chat
   messageText = ''; // Texto que está escribiendo el usuario
   sendingMessage = false; // Indica si se está enviando un mensaje
   assistantTyping = false; // Indica si el asistente está generando una respuesta
@@ -72,7 +73,14 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     // this.user = this.authService.getCurrentUser();
 
     // Simulación de usuario autenticado para desarrollo
-    this.user = { uid: 'usuario123', name: 'Usuario de Prueba', photoURL: '' };
+    this.user = {
+      uid: 'usuario123',
+      name: 'Usuario de Prueba',
+      photoUrl: '',
+      email: 'usuario@ejemplo.com',
+      creationDate: new Date(),
+      lastConnection: new Date(),
+    };
 
     if (!this.user) {
       await this.router.navigate(['/auth']);
@@ -202,8 +210,8 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
       .replace(/\*(.*?)\*/g, '<em>$1</em>');
   }
 
-  trackByMessage(index: number, message: any): string {
-    return message.id || `${message.tipo}-${message.fechaEnvio.getTime()}`;
+  trackByMessage(index: number, message: ChatMessage): string {
+    return message.id || `${message.type}-${message.sentDate.getTime()}`;
   }
 
   handleImageError(event: any): void {
