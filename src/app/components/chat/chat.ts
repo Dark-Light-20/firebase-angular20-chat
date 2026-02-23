@@ -95,7 +95,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
     try {
       // Inicializamos el chat con el ID del usuario
-      // await this.chatService.initializeChat(this.user.uid);
+      await this.chatService.initializeChat(this.user.uid);
     } catch (error) {
       console.error('❌ Error initializing chat in component:', error);
       throw error;
@@ -106,18 +106,18 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
   private configureSubscriptions(): void {
     // Suscribirse a los mensajes del chat
-    // const subMessages = this.chatService.messages$.subscribe(messages => {
-    //   this.messages = messages;
-    //   this.shouldScroll = true;
-    // });
-    // // Suscribirse al estado del asistente
-    // const subAssistant = this.chatService.assistantResponding$.subscribe(isResponding => {
-    //   this.assistantTyping = isResponding;
-    //   if (isResponding) {
-    //     this.shouldScroll = true;
-    //   }
-    // });
-    // this.subscriptions.push(subMessages, subAssistant);
+    const subMessages = this.chatService.messages$.subscribe((messages) => {
+      this.messages = messages;
+      this.shouldScroll = true;
+    });
+    // Suscribirse al estado del asistente
+    const subAssistant = this.chatService.assistantResponding$.subscribe((isResponding) => {
+      this.assistantTyping = isResponding;
+      if (isResponding) {
+        this.shouldScroll = true;
+      }
+    });
+    this.subscriptions.push(subMessages, subAssistant);
   }
 
   async sendMessage(): Promise<void> {
@@ -136,7 +136,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
     try {
       // Enviamos el mensaje usando el servicio de chat
-      // await this.chatService.sendMessage(text);
+      await this.chatService.sendMessage(text);
 
       // Hacemos focus en el input para continuar escribiendo
       this.focusInput();
@@ -163,7 +163,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   async signOut(): Promise<void> {
     try {
       // Limpiamos el chat local
-      // this.chatService.cleanChat();
+      this.chatService.clearChat();
 
       // Cerramos sesión en Firebase
       await this.authService.logout();
