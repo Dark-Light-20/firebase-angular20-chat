@@ -1,1 +1,150 @@
-<p>chat works!</p>
+<!-- Contenedor principal del chat -->
+<div class="chat-container">
+  <!-- Header con información del usuario -->
+  <header class="chat-header">
+    <div class="user-info">
+      <img
+        [src]="user?.photoURL || 'default-avatar.png'"
+        [alt]="user?.displayName || 'User'"
+        class="user-avatar"
+        (error)="handleImageError($event)"
+      />
+      <div class="user-details">
+        <h3 class="user-name">{{ user?.displayName || 'User' }}</h3>
+        <p class="user-email">{{ user?.email }}</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Botón de cerrar sesión -->
+      <button class="logout-btn" (click)="signOut()" title="Sign out">Salir</button>
+    </div>
+  </header>
+
+  <!-- Área de mensajes -->
+  <main class="chat-messages" #messagesContainer>
+    <!-- Mensaje de bienvenida cuando no hay mensajes -->
+    @if (messages.length === 0 && !loadingHistory) {
+      <div class="welcome-message">
+        <div class="welcome-content">
+          <div class="welcome-icon">🤖</div>
+          <h2>¡Hola! Soy tu asistente virtual</h2>
+          <p>Puedo ayudarte con preguntas, programación, tareas cotidianas y mucho más.</p>
+          <p class="welcome-tip">
+            💡 <strong>Consejo:</strong> Sé específico en tus preguntas para obtener mejores
+            respuestas.
+          </p>
+        </div>
+      </div>
+    }
+
+    <!-- Indicador de carga del historial -->
+    @if (loadingHistory) {
+      <div class="loading-history">
+        <div class="loading-spinner"></div>
+        <p>Cargando tu historial de conversaciones...</p>
+      </div>
+    }
+
+    <!-- Lista de mensajes -->
+    <div class="messages-list">
+      @for (mensaje of messages; track trackByMessage($index, mensaje)) {
+        <div
+          class="message-wrapper"
+          [class.user-message]="mensaje.tipo === 'usuario'"
+          [class.assistant-message]="mensaje.tipo === 'asistente'"
+        >
+          <!-- Mensaje del usuario -->
+          @if (mensaje.tipo === 'usuario') {
+            <div class="message user-msg">
+              <div class="message-content">
+                <p>{{ mensaje.contenido }}</p>
+              </div>
+              <div class="message-time">
+                {{ formatTime(mensaje.fechaEnvio) }}
+              </div>
+            </div>
+          }
+
+          <!-- Mensaje del asistente -->
+          @if (mensaje.tipo === 'asistente') {
+            <div class="message assistant-msg">
+              <div class="message-avatar">🤖</div>
+              <div class="message-bubble">
+                <div class="message-content">
+                  <p [innerHTML]="formatAssistantMessage(mensaje.contenido)"></p>
+                </div>
+                <div class="message-time">
+                  {{ formatTime(mensaje.fechaEnvio) }}
+                  @if (mensaje.estado === 'error') {
+                    <span class="error-indicator">⚠️</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Indicador de que el asistente está escribiendo -->
+      @if (assistantTyping) {
+        <div class="message-wrapper assistant-message">
+          <div class="message assistant-msg typing">
+            <div class="message-avatar">🤖</div>
+            <div class="message-bubble">
+              <div class="typing-indicator">
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p class="typing-text">El asistente está escribiendo...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- Formulario para enviar mensajes -->
+  <footer class="chat-input">
+    <form class="input-form" (ngSubmit)="sendMessage()" #chatForm="ngForm">
+      <div class="input-wrapper">
+        <textarea
+          #messageInput
+          [(ngModel)]="messageText"
+          name="message"
+          placeholder="Escribe tu mensaje aquí... (presiona Enter para enviar, Shift+Enter para nueva línea)"
+          class="message-input"
+          [disabled]="sendingMessage || assistantTyping"
+          (keydown)="handleKeyPress($event)"
+          rows="1"
+        >
+        </textarea>
+
+        <button
+          type="submit"
+          class="send-btn"
+          [disabled]="!messageText.trim() || sendingMessage || assistantTyping"
+          [class.sending]="sendingMessage"
+        >
+          <!-- Icono de envío o spinner -->
+          @if (!sendingMessage) {
+            <span>></span>
+          }
+          @if (sendingMessage) {
+            <span class="sending-spinner"></span>
+          }
+        </button>
+      </div>
+
+      <!-- Información del estado -->
+      @if (errorMessage) {
+        <div class="input-status">
+          <span class="error-text">❌ {{ errorMessage }}</span>
+        </div>
+      }
+    </form>
+  </footer>
+</div>
