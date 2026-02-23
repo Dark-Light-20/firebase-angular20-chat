@@ -1,18 +1,19 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
 import { ChatMessage } from '../models/chat';
 import { AuthService } from './auth';
 import { FirestoreService } from './firestore';
+import { GeminiService } from './gemini';
 
-const firestoreServiceMock = {
+/* const firestoreServiceMock = {
   fetchUserMessages: (userId: string) => of([]),
   saveMessage: async (message: ChatMessage) => Promise.resolve(),
-};
+}; */
 
-const geminiServiceMock = {
+/* const geminiServiceMock = {
   convertHistoryToGemini: (history: ChatMessage[]) => history,
   sendMessage: async (content: string, history: any) => 'Respuesta mock de Gemini',
-};
+}; */
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +23,7 @@ export class ChatService {
 
   // Todavía no implementados:
   private readonly firestoreService = inject(FirestoreService);
-  // private readonly geminiService = inject(GeminiService);
+  private readonly geminiService = inject(GeminiService);
 
   // BehaviorSubject para mantener la lista de mensajes del chat actual
   // BehaviorSubject siempre tiene un valor inicial y emite el último valor a nuevos suscriptores
@@ -131,29 +132,20 @@ export class ChatService {
       // const historialParaGemini = this.geminiService.convertirHistorialAGemini(
       //   mensajesActuales.slice(-6)
       // );
-      const geminiMessageHistory = geminiServiceMock.convertHistoryToGemini(
+      const geminiMessageHistory = this.geminiService.convertMessageHistoryToGemini(
         currentMessages.slice(-6),
       );
 
       // Enviamos el mensaje a ChatGPT y esperamos la respuesta (usando mock)
-      // const respuestaAsistente = await firstValueFrom(
-      //   this.geminiService.enviarMensaje(contenidoMensaje, historialParaGemini)
-      // );
-      const assistantResponse = await geminiServiceMock.sendMessage(
+      const assistantResponse = await firstValueFrom(
+        this.geminiService.sendMessage(messageContent, geminiMessageHistory),
+      );
+      /* const assistantResponse = await geminiServiceMock.sendMessage(
         messageContent,
         geminiMessageHistory,
-      );
+      ); */
 
       // Creamos el mensaje con la respuesta del asistente
-      // const mensajeAsistente: ChatMessage = {
-      //   userId: usuarioActual.uid,
-      //   content: respuestaAsistente,
-      //   sentDate: new Date(),
-      //   type: 'assistant',
-      //   status: 'sent'
-      // };
-
-      // POR AHORA, como no tenemos Gemini implementado, usamos un mock
       const assistantMessage: ChatMessage = {
         userId: currentUser.uid,
         content: assistantResponse,
@@ -161,6 +153,15 @@ export class ChatService {
         type: 'assistant',
         status: 'sent',
       };
+
+      // POR AHORA, como no tenemos Gemini implementado, usamos un mock
+      /* const assistantMessage: ChatMessage = {
+        userId: currentUser.uid,
+        content: assistantResponse,
+        sentDate: new Date(),
+        type: 'assistant',
+        status: 'sent',
+      }; */
 
       // PRIMERO mostramos la respuesta en la UI inmediatamente
       const updatedMessages = this.messagesSubject.value;
@@ -214,10 +215,10 @@ export class ChatService {
 
   isChatReady(): boolean {
     const isUserAuthenticated = !!this.authService.getCurrentUser();
-    // const geminiConfigurado = this.geminiService.verificarConfiguracion();
+    const isGeminiConfigured = this.geminiService.isConfigurationValid();
 
     // Por ahora, como no tenemos Gemini implementado, asumimos que siempre está configurado
-    const isGeminiConfigured = true;
+    // const isGeminiConfigured = true;
 
     return isUserAuthenticated && isGeminiConfigured;
   }
