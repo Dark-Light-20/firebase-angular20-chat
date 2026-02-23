@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, of } from 'rxjs';
 import { ChatMessage } from '../models/chat';
 import { AuthService } from './auth';
+import { FirestoreService } from './firestore';
 
 const firestoreServiceMock = {
   fetchUserMessages: (userId: string) => of([]),
@@ -20,7 +21,7 @@ export class ChatService {
   private authService = inject(AuthService);
 
   // Todavía no implementados:
-  // private readonly firestoreService = inject(FirestoreService);
+  private readonly firestoreService = inject(FirestoreService);
   // private readonly geminiService = inject(GeminiService);
 
   // BehaviorSubject para mantener la lista de mensajes del chat actual
@@ -44,22 +45,22 @@ export class ChatService {
     this.isLoadingHistory = true;
 
     try {
-      // this.firestoreService.obtenerMensajesUsuario(usuarioId).subscribe({
-      //   next: (mensajes) => {
-      //     // Actualizamos el BehaviorSubject con los mensajes obtenidos
-      //     this.messagesSubject.next(mensajes);
-      //     this.isLoadingHistory = false;
-      //   },
-      //   error: (error) => {
-      //     console.error('❌ Error al cargar historial:', error);
-      //     this.isLoadingHistory = false;
+      this.firestoreService.getUserMessages(userId).subscribe({
+        next: (messages) => {
+          // Actualizamos el BehaviorSubject con los mensajes obtenidos
+          this.messagesSubject.next(messages);
+          this.isLoadingHistory = false;
+        },
+        error: (error) => {
+          console.error('❌ Error al cargar historial:', error);
+          this.isLoadingHistory = false;
 
-      //     // En caso de error, iniciamos con una lista vacía
-      //     this.messagesSubject.next([]);
-      //   }
-      // });
+          // En caso de error, iniciamos con una lista vacía
+          this.messagesSubject.next([]);
+        },
+      });
       // 🎭 Usando mock del FirestoreService
-      firestoreServiceMock.fetchUserMessages(userId).subscribe({
+      /* firestoreServiceMock.fetchUserMessages(userId).subscribe({
         next: (userMessages) => {
           // Actualizamos el BehaviorSubject con los mensajes obtenidos
           this.messagesSubject.next(userMessages);
@@ -72,7 +73,7 @@ export class ChatService {
           // En caso de error, iniciamos con una lista vacía
           this.messagesSubject.next([]);
         },
-      });
+      }); */
     } catch (error) {
       console.error('❌ Error al inicializar chat:', error);
       this.isLoadingHistory = false;
@@ -111,8 +112,8 @@ export class ChatService {
 
       // DESPUÉS intentamos guardarlo en Firestore (en background)
       try {
-        // await this.firestoreService.guardarMensaje(mensajeUsuario);
-        await firestoreServiceMock.saveMessage(userMessage);
+        await this.firestoreService.saveMessage(userMessage);
+        // await firestoreServiceMock.saveMessage(userMessage);
       } catch (firestoreError) {
         // El mensaje ya está visible, así que continuamos
       }
@@ -169,8 +170,8 @@ export class ChatService {
 
       // DESPUÉS intentamos guardar en Firestore (en background)
       try {
-        // await this.firestoreService.guardarMensaje(mensajeAsistente);
-        await firestoreServiceMock.saveMessage(assistantMessage);
+        await this.firestoreService.saveMessage(assistantMessage);
+        // await firestoreServiceMock.saveMessage(assistantMessage);
       } catch (firestoreError) {
         // El mensaje ya está visible, así que no es crítico
       }
@@ -187,8 +188,8 @@ export class ChatService {
       };
 
       try {
-        // await this.firestoreService.guardarMensaje(mensajeError);
-        await firestoreServiceMock.saveMessage(errorMessage);
+        await this.firestoreService.saveMessage(errorMessage);
+        // await firestoreServiceMock.saveMessage(errorMessage);
       } catch (saveErrorError) {
         console.error('❌ Error al guardar mensaje de error:', saveErrorError);
         // Como último recurso, mostramos el error temporalmente en la UI
